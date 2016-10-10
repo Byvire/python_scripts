@@ -1,0 +1,113 @@
+#!/usr/bin/env python
+
+""" This script is used to generate word lists from essays written by
+    whoever it is whose password you wish to crack. It will prevent
+    duplicate lines in the outfile.
+"""
+
+import argparse
+import string
+from sys import stderr
+from collections import deque
+
+def write_word_list(infile=None, outfile=None, **kwargs):
+    """ This writes a newline-separated list of the unique words in
+        the infile to the outfile. First it checks whether there are
+        words in the outfile already, but it shouldn't be an issue if
+        you use stdin and stdout anyway.
+        outfile should be opened as 'rw'
+    """
+    # Do some setup, i.e. parse the good old kwargs.
+    rm_chrs = string.punctuation
+    if 'delimiters' in kwargs and kwargs['delimiters']:
+        delimiters = kwargs['delimiters']
+        for char in delimiters:
+            if char in rm_chrs:
+                rm_chrs = rm_chrs.replace(char, '')
+    else:
+        delimiters = ''
+
+    # words is the set of words we've already added
+    words = set()
+    # I/you may want to add subclasses of _WordConnector.
+    phrasemaker = _WordConnector(
+        kwargs['adjacent_words'] if 'adjacent_words' in kwargs else 1)
+    if 'include_empty' not in kwargs:
+        # Mark the empty string as already added.
+        words.add('')
+
+    # Do the actual reading and writing now:
+    for line in infile:
+        no_punctuation = line.translate(
+            string.maketrans(delimiters, ' '*len(delimiters)), rm_chrs)
+        if 'preserve_case' not in kwargs or not kwargs['preserve_case']:
+            no_punctuation = no_punctuation.lower()
+        separated = no_punctuation.split()
+        for word in separated:
+            if word == '':
+                continue
+            phrasemaker.recv_word(word)
+            while phrasemaker.has_output():
+                phrase = phrasemaker.output()
+                if phrase not in words:
+                    print >> outfile, phrase
+                    words.add(phrase)
+
+
+
+class _WordConnector(object):
+    """ This class is responsible for putting adjacent words together
+        when you pass -a or --adjacent-words.
+    """
+    def __init__(self, phrase_length):
+        if phrase_length <= 0:
+            raise ValueError('Attempted to initialize _WordConnector '
+                             'with negative or zero phrase_length.')
+        self.phrase = deque(maxlen=phrase_length) # Stores the most recent words
+        self.updated = False
+
+    def recv_word(self, word):
+        self.phrase.append(word)
+        # the phrase.maxlen'th word is overwritten if it exists.
+        self.updated = True
+
+    def has_output(self):
+        return self.updated and len(self.phrase) == self.phrase.maxlen
+
+    def output(self):
+        self.updated = False
+        return ''.join([word for word in self.phrase])
+
+def main():
+    """ Parses the command line arguments and does the stuff.
+        See the argparse help. (Run from bash with "--help".)
+    """
+
+    parser = argparse.ArgumentParser(
+        description="Generate a word list from somebody's written work")
+    parser.add_argument('infile', type=argparse.FileType('r'),
+                        help='Input filename. - for stdin')
+    parser.add_argument('outfile', type=argparse.FileType('w+'),
+                        help='Output filename. - for stdout')
+    parser.add_argument('-a', '--adjacent-words',
+                        type=int, default=1,
+                        help='Output sequences of adjacent words on '
+                        'each line. Useful for collecting phrases.')
+
+    parser.add_argument('-d', '--delimiters', type=str,
+                        help=r'Characters other than space to delimit '
+                        r'distinct words. (The letters will not appear'
+                        r' in the output.) Example: +_<>().')
+    parser.add_argument('-n', '--include-empty', action='store_true',
+                        help="Include the empty string '' in the output file."
+                        " I don't see why you would want this, but here ya go.")
+
+    args = parser.parse_args()
+    # kwparams = {}
+    # print >> stderr, args._get_kwargs()
+    # if args.delimiters:
+    #     kwparams['delimiters'] = args.delimiters
+    write_word_list(**vars(args))
+
+if __name__ == '__main__':
+    main()

@@ -1,0 +1,68 @@
+#!/usr/bin/env python3
+
+"""It does the xor."""
+
+import argparse
+#from itertools import repeat
+
+class CycleStr(object): 
+    """An iterator that loops over the same string forever.
+
+    Handy for an xor key.
+
+    Note that itertools.cycle does this, but not necessarily
+    in a memory efficient way, according to the docs.
+    """
+    def __init__(self, text):
+        """Constructor. Pass the key value."""
+        self.text = text
+        self.index = -1 # small optimization, see self.next
+
+    def __iter__(self):
+        """I AM an iterator!"""
+        return self
+
+    def __next__(self):
+        """Standard iterator function.
+
+        Note that this iterator will NEVER reach its end.
+        """
+        # index starts at -1 so this works
+        self.index = (self.index + 1) % len(self.text)
+        return self.text[self.index]
+
+
+def xor(text, key):
+    """xor a text with a repeating key"""
+    #pad = (key * (len(text) // len(key) + 1))[:len(text)]
+    pad = CycleStr(key)
+    return ''.join([chr(ord(a) ^ ord(b)) for a, b in zip(text, pad)])
+
+
+def main():
+    """For the command line part"""
+    parser = argparse.ArgumentParser(
+        description='Bitwise xor of a file with a key, or else '
+        'of two files.')
+    parser.add_argument('infile', type=argparse.FileType('r'),
+                        help='Input file, - for stdin')
+    parser.add_argument('-k', '--key', help='key to be xor\'ed with the'
+                        ' infile.', type=str, default=None)
+    parser.add_argument('-f', '--file', type=argparse.FileType('r'),
+                        default=None, help='A second file instead of '
+                        'a key. If both provided, key is prefered. '
+                        'Note that this file is simply treated as a '
+                        'key.')
+
+    args = parser.parse_args()
+    if not (args.key or args.file):
+        raise argparse.ArgumentError("-k", "pass one of -k or -f")
+    elif args.key:
+        print(xor(args.infile.read(), args.key))
+    else:
+        # Not amazingly efficient, I think
+        print(xor(args.infile.read(), args.file.read()))
+
+
+if __name__ == '__main__':
+    main()

@@ -1,0 +1,20 @@
+#!/bin/sh
+
+INFILE="$1"
+
+if [ ! -e "$INFILE" ] ; then
+    echo "Nopenopenope, need an input file." 1>&2
+    exit
+fi
+
+CURRENT=$(file "$INFILE" | grep CRLF)
+
+
+
+if [ -z "$CURRENT" ] ; then
+    echo "Converting to CRLF" 1>&2
+    sed 's/$'"/`echo \\\r`/" "$INFILE"
+else
+    echo "Converting to UNIX" 1>&2
+    sed 's/$//' "$INFILE"
+fi
