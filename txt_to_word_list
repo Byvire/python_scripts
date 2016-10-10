@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 """ This script is used to generate word lists from essays written by
     whoever it is whose password you wish to crack. It will prevent
@@ -39,7 +39,7 @@ def write_word_list(infile=None, outfile=None, **kwargs):
     # Do the actual reading and writing now:
     for line in infile:
         no_punctuation = line.translate(
-            string.maketrans(delimiters, ' '*len(delimiters)), rm_chrs)
+            str.maketrans(delimiters, ' '*len(delimiters), rm_chrs))
         if 'preserve_case' not in kwargs or not kwargs['preserve_case']:
             no_punctuation = no_punctuation.lower()
         separated = no_punctuation.split()
@@ -50,7 +50,7 @@ def write_word_list(infile=None, outfile=None, **kwargs):
             while phrasemaker.has_output():
                 phrase = phrasemaker.output()
                 if phrase not in words:
-                    print >> outfile, phrase
+                    print(phrase, file=outfile)
                     words.add(phrase)
 
 
@@ -104,7 +104,7 @@ def main():
 
     args = parser.parse_args()
     # kwparams = {}
-    # print >> stderr, args._get_kwargs()
+    # print(args._get_kwargs(), file=stderr)
     # if args.delimiters:
     #     kwparams['delimiters'] = args.delimiters
     write_word_list(**vars(args))
