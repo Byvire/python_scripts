@@ -5,9 +5,14 @@
     duplicate lines in the outfile.
 """
 
+# Probably won't actually make this thing python 2
+# compatible because str.maketrans and str.translate
+# are different.
+from __future__ import print_function
+
 import argparse
 import string
-from sys import stderr
+#from sys import stderr
 from collections import deque
 
 def write_word_list(infile=None, outfile=None, **kwargs):
@@ -67,14 +72,17 @@ class _WordConnector(object):
         self.updated = False
 
     def recv_word(self, word):
+        """Process a word"""
         self.phrase.append(word)
         # the phrase.maxlen'th word is overwritten if it exists.
         self.updated = True
 
     def has_output(self):
+        """Returns whether you should call output"""
         return self.updated and len(self.phrase) == self.phrase.maxlen
 
     def output(self):
+        """Gives you the next word, of course"""
         self.updated = False
         return ''.join([word for word in self.phrase])
 
