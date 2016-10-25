@@ -1,0 +1,75 @@
+#!/usr/bin/env python3
+
+# Based on the Turing machine SELF described on page 247 of Michael Sipser's
+# Introduction to the Theory of Computation, third edition.
+# Please allow me some leeway as far as PEP8 compliance here.
+
+import tempfile
+
+def fixed_print(*args, **kwargs):
+    # Otherwise every output has more newlines than the previous one
+    kwargs['end'] = ''
+    print(*args, **kwargs)
+
+
+def A(tape):
+    # tape is a file opened 'w+'
+    tape.truncate()
+    fixed_print('\ndef B(tape):\n    # tape is a file object opened \'w+\'\n    # Step 1: Compute q(*args)\n    tape.seek(0)\n    own_description = tape.read()\n    tape.seek(0)\n    tape.truncate() # Get rid of that input\n    A_description = """\ndef A(tape):\n    # tape is a file opened \'w+\'\n    tape.truncate()\n    fixed_print({0},\n          file=tape)\n""".format(own_description.__repr__())\n    \n    fixed_print("""#!/usr/bin/env python3\n\n# Based on the Turing machine SELF described on page 247 of Michael Sipser\'s\n# Introduction to the Theory of Computation, third edition.\n# Please allow me some leeway as far as PEP8 compliance here.\n\nimport tempfile\n\ndef fixed_print(*args, **kwargs):\n    # Otherwise every output has more newlines than the previous one\n    kwargs[\'end\'] = \'\'\n    print(*args, **kwargs)\n\n{0}\n\n{1}\n\nif __name__ == \'__main__\':\n    with tempfile.TemporaryFile(mode=\'w+\') as tape:\n        A(tape)\n        # buf now holds a description of B\n        tape.seek(0) # redundant but safe\n        B(tape)\n        tape.seek(0)\n        fixed_print(tape.read())\n"""\n          .format(A_description, own_description),\n          file=tape)\n',
+          file=tape)
+
+
+
+def B(tape):
+    # tape is a file object opened 'w+'
+    # Step 1: Compute q(*args)
+    tape.seek(0)
+    own_description = tape.read()
+    tape.seek(0)
+    tape.truncate() # Get rid of that input
+    A_description = """
+def A(tape):
+    # tape is a file opened 'w+'
+    tape.truncate()
+    fixed_print({0},
+          file=tape)
+""".format(own_description.__repr__())
+    
+    fixed_print("""#!/usr/bin/env python3
+
+# Based on the Turing machine SELF described on page 247 of Michael Sipser's
+# Introduction to the Theory of Computation, third edition.
+# Please allow me some leeway as far as PEP8 compliance here.
+
+import tempfile
+
+def fixed_print(*args, **kwargs):
+    # Otherwise every output has more newlines than the previous one
+    kwargs['end'] = ''
+    print(*args, **kwargs)
+
+{0}
+
+{1}
+
+if __name__ == '__main__':
+    with tempfile.TemporaryFile(mode='w+') as tape:
+        A(tape)
+        # buf now holds a description of B
+        tape.seek(0) # redundant but safe
+        B(tape)
+        tape.seek(0)
+        fixed_print(tape.read())
+"""
+          .format(A_description, own_description),
+          file=tape)
+
+
+if __name__ == '__main__':
+    with tempfile.TemporaryFile(mode='w+') as tape:
+        A(tape)
+        # buf now holds a description of B
+        tape.seek(0) # redundant but safe
+        B(tape)
+        tape.seek(0)
+        fixed_print(tape.read())
