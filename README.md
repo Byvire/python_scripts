@@ -12,9 +12,8 @@ This is a bit cleaner than
 
 because the Python interpreter won't complain about blank files, so you get the trivial solution:
 
-`$ touch TRIVIAL
-
-$ diff TRIVIAL <(python TRIVIAL)`
+    $ touch TRIVIAL
+    $ diff TRIVIAL <(python TRIVIAL)
 
 Passing `--side-by-side` to `diff` will also help you catch any rascals who try to pass off a blank self-quine.
 ... In case you're worried about that.
