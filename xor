@@ -6,7 +6,7 @@ import argparse
 #from itertools import repeat
 
 class CycleStr(object): 
-    """An iterator that loops over the same string forever.
+    """An iterator that loops over the same string (or bytes) forever.
 
     Handy for an xor key.
 
@@ -33,10 +33,10 @@ class CycleStr(object):
 
 
 def xor(text, key):
-    """xor a text with a repeating key"""
+    """xor a text with a repeating key (both are bytes objects)"""
     #pad = (key * (len(text) // len(key) + 1))[:len(text)]
     pad = CycleStr(key)
-    return ''.join([chr(ord(a) ^ ord(b)) for a, b in zip(text, pad)])
+    return ''.join([chr(a ^ b) for a, b in zip(text, pad)])
 
 
 def main():
@@ -44,11 +44,11 @@ def main():
     parser = argparse.ArgumentParser(
         description='Bitwise xor of a file with a key, or else '
         'of two files.')
-    parser.add_argument('infile', type=argparse.FileType('r'),
+    parser.add_argument('infile', type=argparse.FileType('rb'),
                         help='Input file, - for stdin')
     parser.add_argument('-k', '--key', help='key to be xor\'ed with the'
-                        ' infile.', type=str, default=None)
-    parser.add_argument('-f', '--file', type=argparse.FileType('r'),
+                        ' infile. Interpreted as utf-8.', type=str, default=None)
+    parser.add_argument('-f', '--file', type=argparse.FileType('rb'),
                         default=None, help='A second file instead of '
                         'a key. If both provided, key is prefered. '
                         'Note that this file is simply treated as a '
@@ -58,7 +58,8 @@ def main():
     if not (args.key or args.file):
         raise argparse.ArgumentError("-k", "pass one of -k or -f")
     elif args.key:
-        print(xor(args.infile.read(), args.key))
+        key = bytes(args.key, encoding='utf-8')
+        print(xor(args.infile.read(), key))
     else:
         # Not amazingly efficient, I think
         print(xor(args.infile.read(), args.file.read()))
